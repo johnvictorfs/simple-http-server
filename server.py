@@ -1,7 +1,8 @@
 import json
 import re
-from typing import List, Tuple, Callable
+from warnings import warn
 from dataclasses import dataclass
+from typing import List, Tuple, Callable
 from http.server import HTTPServer, SimpleHTTPRequestHandler, BaseHTTPRequestHandler
 
 
@@ -24,7 +25,7 @@ class Server:
                 return [{'username': 'John', id: 4}, {'username': 'Davis', id: 2}]
         """
         def decorator(callback: Callable):
-            result = (path, callback: Callable)
+            result = (path, callback)
             self.add_route(result)
             return result
 
@@ -32,8 +33,15 @@ class Server:
 
     def run(self):
         """
-        Run the API Server
+        Run the HTTP Server
         """
+        production_warning = (
+            'This HTTP Server is not suitable for Production. As noted on the official http.server Python Docs.\n'
+            'Read more at: https://docs.python.org/3/library/http.server.html'
+        )
+
+        warn(production_warning, Warning)
+
         class RequestHandler(SimpleHTTPRequestHandler):
             def do_GET(handler_self):
                 """
