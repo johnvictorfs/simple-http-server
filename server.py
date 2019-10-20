@@ -1,9 +1,8 @@
 import json
 import re
 from warnings import warn
-from dataclasses import dataclass
 from typing import List, Tuple, Callable
-from http.server import HTTPServer, SimpleHTTPRequestHandler, BaseHTTPRequestHandler
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 
 class Server:
@@ -17,14 +16,14 @@ class Server:
         """
         self.routes.append(route)
 
-    def route(self, path: str):
+    def route(self, path: str) -> Callable:
         """
         Decorator to add an API route, used like so::
             @server.route('users')
             def get_users():
                 return [{'username': 'John', id: 4}, {'username': 'Davis', id: 2}]
         """
-        def decorator(callback: Callable):
+        def decorator(callback: Callable) -> Tuple[str, Callable]:
             result = (path, callback)
             self.add_route(result)
             return result
@@ -59,4 +58,8 @@ class Server:
 
         server_address = ('', self.port)
         httpd = HTTPServer(server_address, RequestHandler)
+
+        host, port = httpd.server_address
+        print(f'Running HTTP server at http://{host}:{port}')
+
         httpd.serve_forever()
