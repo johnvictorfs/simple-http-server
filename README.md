@@ -37,14 +37,14 @@ def users() -> List[User]:
 
 ---
 
-* Routes with Typed Arguments
+* Routes with Arguments Typing inferred by Type Annotations
 
 ```python
 # http://localhost:8000/users/4
 # http://localhost:8000/users/2
 # http://localhost:8000/users/asdasd Fails
 
-@server.route('users/<_id:int>')
+@server.route('users')
 def user(_id: int) -> User:
-    return user_list[_id]
+    return user_list[_id]  # _id is cast to int already
 ```

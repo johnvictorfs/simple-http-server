@@ -54,24 +54,22 @@ class Server:
                 Method run on every GET Request to the Server
                 """
                 for route_path, callback in self.routes:
-                    # Get only path before the first '/', which will be the base path
-                    path = route_path.partition('/')[0]
+                    route_pattern = fr'^\/?{route_path}'
 
-                    route_pattern = fr'^\/?{path}'
+                    # Route callback type hinting
+                    arg_list = list(callback.__annotations__.items())
 
-                    # Find any arguments on the route path with the format: '<name:type>'
-                    # Example: 'users/<_id:int>'
-                    args_schema = re.findall(r'<(\w+):(\w+)>', route_path)
-
-                    if args_schema:
-                        for arg_name, arg_type in args_schema:
-                            # Look for the arguments in the current path using the defined types
-                            if arg_type == 'int':
-                                route_pattern += r'/(\d+)'
-                            elif arg_type == 'str':
-                                route_pattern += r'/(\w+)'
-                            elif arg_type == 'bool':
-                                route_pattern += r'/(false|true|False|True)'
+                    for arg_name, arg_type in arg_list:
+                        if arg_name == 'return':
+                            # Ignore callback return type hints
+                            continue
+                        # Look for the arguments in the current path using the route callback type hints
+                        if arg_type is int:
+                            route_pattern += r'/(\d+)'
+                        elif arg_type is str:
+                            route_pattern += r'/(\w+)'
+                        elif arg_type is bool:
+                            route_pattern += r'/(false|true|False|True)'
 
                     # Accept trailing '/' if it exists
                     route_pattern += r'\/?$'
@@ -86,8 +84,8 @@ class Server:
 
                         # Map URL arguments into kwargs, casting them to its appropriate type
                         for i, arg in enumerate(args):
-                            arg_name, arg_type = args_schema[i]
-                            arg_value = getattr(builtins, arg_type)(arg)
+                            arg_name, arg_type = arg_list[i]
+                            arg_value = arg_type(arg)
                             kwargs[arg_name] = arg_value
 
                         try:

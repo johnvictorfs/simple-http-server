@@ -23,7 +23,7 @@ def users() -> List[User]:
     return user_list
 
 
-@server.route('users/<_id:int>')
+@server.route('users')
 def user(_id: int) -> User:
     return user_list[_id]
 
@@ -33,7 +33,7 @@ def posts() -> List[Post]:
     return post_list
 
 
-@server.route('post/<_id:int>')
+@server.route('post')
 def post(_id: int) -> Post:
     return post_list[_id]
 
