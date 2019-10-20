@@ -14,14 +14,21 @@ Heavily inspired by [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [Dj
 
 ## Examples:
 
+- Example app: [`example.py`](example.py)
+
 * Server Setup
 
-```python
-from simple_http.server import Server
+  ```python
+  # app.py
 
-server = Server(port=8000)
-server.run()
-```
+  from simple_http.server import Server
+
+  server = Server(port=8000)
+  server.run()
+  ```
+
+  * Run with `python app.py`
+    * By default server will run at `http://localhost:8000`
 
 ---
 
