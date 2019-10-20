@@ -3,19 +3,14 @@ import re
 from typing import List, Tuple, Callable
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-
-def red(text: str) -> str:
-    return f'\033[31m{text}\033[0m'
-
-
-def green(text: str) -> str:
-    return f'\33[92m{text}\033[0m'
+from simple_http.colors import red, green
 
 
 class Server:
-    def __init__(self, port: int = 8000):
+    def __init__(self, port: int = 8000, host: str = 'localhost'):
         self.routes: List[Tuple[str, Callable]] = []
         self.port = port
+        self.host = host
 
     def add_route(self, route: Tuple[str, Callable]):
         """
@@ -48,6 +43,14 @@ class Server:
         print(f'{red("Warning: ")}\033[0m{production_warning}')
 
         class RequestHandler(SimpleHTTPRequestHandler):
+            def set_headers(handler_self, code: int, content_type: str = 'application/json'):
+                """
+                Sends response code and Content-type headers
+                """
+                handler_self.send_response(code)
+                handler_self.send_header('Content-type', content_type)
+                handler_self.end_headers()
+
             def do_GET(handler_self):
                 """
                 Method run on every GET Request to the Server
@@ -92,20 +95,16 @@ class Server:
                         except Exception as e:
                             # Return Exception as error message in case any Exception is thrown
                             # when running the route's callback
-                            handler_self.send_response(400)
-                            handler_self.end_headers()
+                            handler_self.set_headers(500)
                             return handler_self.wfile.write(json.dumps({'error': str(e)}).encode())
 
-                        handler_self.send_response(200)
-                        handler_self.end_headers()
-
+                        handler_self.set_headers(200)
                         return handler_self.wfile.write(json.dumps(data).encode())
 
-                handler_self.send_response(404)
-                handler_self.end_headers()
+                handler_self.set_headers(404)
                 return handler_self.wfile.write(json.dumps({'error': f'Path not found: {handler_self.path}'}).encode())
 
-        server_address = ('', self.port)
+        server_address = (self.host, self.port)
         httpd = HTTPServer(server_address, RequestHandler)
 
         host, port = httpd.server_address
