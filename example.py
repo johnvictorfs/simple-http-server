@@ -1,6 +1,7 @@
 from typing import List, TypedDict
 
 from simple_http.server import Server
+from simple_http.errors import HttpErrorNotFound404
 
 server = Server()
 
@@ -25,7 +26,10 @@ def users() -> List[User]:
 
 @server.route('users')
 def user(_id: int) -> User:
-    return user_list[_id]
+    try:
+        return user_list[_id]
+    except IndexError:
+        raise HttpErrorNotFound404('User not found.')
 
 
 @server.route('posts')
@@ -35,7 +39,10 @@ def posts() -> List[Post]:
 
 @server.route('post')
 def post(_id: int) -> Post:
-    return post_list[_id]
+    try:
+        return post_list[_id]
+    except IndexError:
+        raise HttpErrorNotFound404('Post not found.')
 
 
 server.run()

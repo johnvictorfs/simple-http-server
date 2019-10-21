@@ -1,14 +1,16 @@
 import json
 import re
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Union
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 from simple_http.colors import red, green
+from simple_http.errors import HttpErrorNotFound404
 
 
 class Server:
     def __init__(self, port: int = 8000, host: str = 'localhost'):
         self.routes: List[Tuple[str, Callable]] = []
+        self.httpd: HTTPServer
         self.port = port
         self.host = host
 
@@ -51,8 +53,16 @@ class Server:
                 handler_self.send_header('Content-type', content_type)
                 handler_self.end_headers()
 
+            def return_json(handler_self, code: int, data: Union[dict, list]) -> int:
+                """
+                Sends data as a JSON Response
+                """
+                handler_self.set_headers(code)
+                return handler_self.wfile.write(json.dumps(data).encode())
+
             def do_GET(handler_self):
                 """
+                Handle GET requests to the HTTP Server
                 Method run on every GET Request to the Server
                 """
                 for route_path, callback in self.routes:
@@ -92,22 +102,32 @@ class Server:
 
                         try:
                             data = callback(**kwargs) if kwargs else callback()
+                        except HttpErrorNotFound404 as e:
+                            return handler_self.return_json(404, {'error': str(e)})
                         except Exception as e:
                             # Return Exception as error message in case any Exception is thrown
                             # when running the route's callback
-                            handler_self.set_headers(500)
-                            return handler_self.wfile.write(json.dumps({'error': str(e)}).encode())
+                            return handler_self.return_json(500, {'error': str(e)})
 
-                        handler_self.set_headers(200)
-                        return handler_self.wfile.write(json.dumps(data).encode())
+                        return handler_self.return_json(200, data)
 
-                handler_self.set_headers(404)
-                return handler_self.wfile.write(json.dumps({'error': f'Path not found: {handler_self.path}'}).encode())
+                return handler_self.return_json(404, {'error': f'Path not found: {handler_self.path}'})
+
+            def do_POST(handler_self):
+                content_length = int(handler_self.headers['Content-Length'])
+                post_data = json.loads(handler_self.rfile.read(content_length))
+                handler_self.return_json(200, post_data)
 
         server_address = (self.host, self.port)
-        httpd = HTTPServer(server_address, RequestHandler)
+        self.httpd = HTTPServer(server_address, RequestHandler)
 
-        host, port = httpd.server_address
+        host, port = self.httpd.server_address
         print(f'{green("Running HTTP server at: ")}http://{host}:{port}')
 
-        httpd.serve_forever()
+        self.httpd.serve_forever()
+
+    def close(self):
+        """
+        Shutdown HTTP Server
+        """
+        self.httpd.shutdown()
