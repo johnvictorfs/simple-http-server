@@ -1,8 +1,8 @@
 # Simple HTTP Server
 
-A toy HTTP Server with **no dependencies** made with [`http.server`](https://docs.python.org/3/library/http.server.html) module from Python's Standard Library (**Not Suitable for Production**)
+A toy HTTP Server Library with **no dependencies** and [unit tests](tests) that wraps the [`http.server`](https://docs.python.org/3/library/http.server.html) module from Python's Standard Library (**Not Suitable for Production**)
 
-Heavily inspired by [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [Django](https://www.djangoproject.com/)
+Heavily inspired by the [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [Django](https://www.djangoproject.com/) Web Frameworks
 
 ---
 
@@ -12,11 +12,11 @@ Heavily inspired by [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [Dj
 
 ---
 
-## Examples:
+## Usage:
 
 - Example app: [`example.py`](example.py)
 
-* Server Setup
+##### Server Setup
 
   ```python
   # app.py
@@ -32,26 +32,64 @@ Heavily inspired by [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [Dj
 
 ---
 
-* Registering Routes
+##### Registering Routes
 
 ```python
 # http://localhost:8000/users
 
 @server.route('users')
 def users() -> List[User]:
-    return [{'username': 'NRiver'}, {'username': 'Potato'}]
+    return  [{'username': 'NRiver'}, {'username': 'Potato'}]
 ```
 
 ---
 
-* Routes with Arguments Typing inferred by Type Annotations
+##### Routes with Arguments Typing inferred by Type Annotations
 
 ```python
-# http://localhost:8000/users/4
-# http://localhost:8000/users/2
-# http://localhost:8000/users/asdasd Fails
+# http://localhost:8000/users/<id:int>
 
 @server.route('users')
 def user(_id: int) -> User:
-    return user_list[_id]  # _id is cast to int already
+    # _id is already cast to int
+    return user_list[_id]
 ```
+
+* `curl http://localhost:8000/users/1`
+    * Returns `200` Success
+    ```json
+    {"username": "Potato"}
+    ```
+
+---
+
+##### Raising HTTP Errors
+```python
+from simple_http.errors import HttpErrorNotFound404
+
+user_list = [{'username': 'NRiver'}, {'username': 'Potato'}]
+
+@server.route('users')
+def user(_id: int) -> User:
+    try:
+        return user_list[_id]
+    except IndexError:
+        # Raise HTTP Errors
+        HttpErrorNotFound404('User not found.')
+```
+
+* `curl http://localhost:8000/users/4`
+    * Returns `404` Not Found (no user at index `4`)
+    ```json
+    {"error": "User not found."}
+    ```
+* `curl http://localhost:8000/users/1`
+    * Returns `200` Success
+    ```json
+    {"username": "Potato"}
+    ```
+* `curl http://localhost:8000/users/asdaasd`
+    * Returns `404` Not Found (wrong type for `_id`)
+    ```json
+    {"error": "Path not found: /users/asdaasd"}
+    ```
