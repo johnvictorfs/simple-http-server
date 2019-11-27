@@ -4,7 +4,7 @@ from typing import List, Tuple, Callable, Union
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 from simple_http.colors import red, green
-from simple_http.errors import HttpErrorNotFound404
+from simple_http.errors import HttpError
 
 
 class Server:
@@ -102,8 +102,8 @@ class Server:
 
                         try:
                             data = callback(**kwargs) if kwargs else callback()
-                        except HttpErrorNotFound404 as e:
-                            return handler_self.return_json(404, {'error': str(e)})
+                        except HttpError as e:
+                            return handler_self.return_json(e.code, {'error': str(e)})
                         except Exception as e:
                             # Return Exception as error message in case any Exception is thrown
                             # when running the route's callback

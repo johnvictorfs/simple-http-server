@@ -1,7 +1,7 @@
 from typing import List, TypedDict
 
 from simple_http.server import Server
-from simple_http.errors import HttpErrorNotFound404
+from simple_http.errors import HttpError
 
 server = Server()
 
@@ -42,7 +42,7 @@ def post(_id: int) -> Post:
     try:
         return post_list[_id]
     except IndexError:
-        raise HttpErrorNotFound404('Post not found.')
+        raise HttpError(404, 'Post not found.')
 
 
 server.run()
