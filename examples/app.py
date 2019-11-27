@@ -21,24 +21,36 @@ post_list: List[Post] = [{'title': 'Potato Title'}, {'title': 'Cenoura Title'}]
 
 @server.route('users')
 def users() -> List[User]:
+    """
+    Get all Users
+    """
     return user_list
 
 
 @server.route('users')
 def user(_id: int) -> User:
+    """
+    Get one User by _id (index)
+    """
     try:
         return user_list[_id]
     except IndexError:
-        raise HttpErrorNotFound404('User not found.')
+        raise HttpError(404, 'User not found.')
 
 
 @server.route('posts')
 def posts() -> List[Post]:
+    """
+    Get all posts
+    """
     return post_list
 
 
 @server.route('post')
 def post(_id: int) -> Post:
+    """
+    Get one post by _id (index)
+    """
     try:
         return post_list[_id]
     except IndexError:
