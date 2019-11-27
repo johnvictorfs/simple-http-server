@@ -4,7 +4,7 @@ import threading
 import requests
 
 from simple_http.server import Server
-from simple_http.errors import HttpErrorNotFound404
+from simple_http.errors import HttpError
 
 user_list = [{'username': 'John'}, {'username': 'Dave'}]
 
@@ -17,9 +17,10 @@ class TestApiRoutes:
         self.host = 'localhost'
         self.port = 8000
         self.server = Server(host=self.host, port=self.port)
-        self.setup_routes()
+        self.setup_routes(self.server)
         self.user_not_found = 'User not found.'
 
+        # Run Test Server in another Thread as to not block tests
         thread = threading.Thread(target=self.server.run)
         thread.daemon = True
         thread.start()
@@ -28,20 +29,21 @@ class TestApiRoutes:
         """Shutdown Test Server"""
         self.server.close()
 
-    def setup_routes(self):
-        """Setup all Routes used for tests"""
-        @self.server.route('users')
+    @staticmethod
+    def setup_routes(server: Server):
+        """Setup Routes used for tests"""
+        @server.route('users')
         def users() -> List[Dict[str, str]]:
             return user_list
 
-        @self.server.route('users')
+        @server.route('users')
         def user(index: int) -> Dict[str, str]:
             try:
                 return user_list[index]
             except IndexError:
-                raise HttpErrorNotFound404(self.user_not_found)
+                raise HttpError(404, 'User not found.')
 
-        @self.server.route('server_error')
+        @server.route('server_error')
         def server_error() -> None:
             5 / 0
 
@@ -81,4 +83,3 @@ class TestApiRoutes:
 
         assert request.status_code == 500
         assert data['error'] == 'division by zero'
-

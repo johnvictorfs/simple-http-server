@@ -2,7 +2,7 @@
 
 A toy HTTP Server Library with **no dependencies** and [unit tests](tests) that wraps the [`http.server`](https://docs.python.org/3/library/http.server.html) module from Python's Standard Library (**Not Suitable for Production**)
 
-Heavily inspired by the [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [Django](https://www.djangoproject.com/) Web Frameworks
+Inspired by the [Flask](https://flask.palletsprojects.com) and [FastAPI](https://fastapi.tiangolo.com) Web Frameworks
 
 ---
 
@@ -14,9 +14,11 @@ Heavily inspired by the [Flask](https://flask.palletsprojects.com/en/1.1.x/) and
 
 ## Usage:
 
-- Example app: [`example.py`](example.py)
+- Example app: [`examples/app.py`](examples/app.py)
 
-##### Server Setup
+---
+
+#### Basic Setup
 
   ```python
   # app.py
@@ -32,7 +34,7 @@ Heavily inspired by the [Flask](https://flask.palletsprojects.com/en/1.1.x/) and
 
 ---
 
-##### Registering Routes
+#### Registering Routes
 
 ```python
 # http://localhost:8000/users
@@ -44,7 +46,7 @@ def users() -> List[User]:
 
 ---
 
-##### Routes with Arguments Typing inferred by Type Annotations
+#### Routes with Arguments Typing inferred by Type Annotations
 
 ```python
 # http://localhost:8000/users/<id:int>
@@ -55,17 +57,17 @@ def user(_id: int) -> User:
     return user_list[_id]
 ```
 
-* `curl http://localhost:8000/users/1`
-    * Returns `200` Success
+* `curl http://localhost:8000/users/1` will return 200 Success
     ```json
     {"username": "Potato"}
     ```
 
 ---
 
-##### Raising HTTP Errors
+#### Raising HTTP Errors
+
 ```python
-from simple_http.errors import HttpErrorNotFound404
+from simple_http.errors import HttpError
 
 user_list = [{'username': 'NRiver'}, {'username': 'Potato'}]
 
@@ -74,22 +76,12 @@ def user(_id: int) -> User:
     try:
         return user_list[_id]
     except IndexError:
-        # Raise HTTP Errors
-        HttpErrorNotFound404('User not found.')
+        # Raise HTTP Error with Code 404
+        raise HttpError(404, 'User not found.')
 ```
 
-* `curl http://localhost:8000/users/4`
-    * Returns `404` Not Found (no user at index `4`)
-    ```json
-    {"error": "User not found."}
-    ```
-* `curl http://localhost:8000/users/1`
-    * Returns `200` Success
-    ```json
-    {"username": "Potato"}
-    ```
-* `curl http://localhost:8000/users/asdaasd`
-    * Returns `404` Not Found (wrong type for `_id`)
-    ```json
-    {"error": "Path not found: /users/asdaasd"}
-    ```
+| URL                             | Response                                  | Code  | Reason                  |
+| --------------------------------|:-----------------------------------------:|:-----:|:-----------------------:|
+| http://localhost:8000/users/4   | `{"error": "User not found."}`            | 404   | No user with _id `4`    |
+| http://localhost:8000/users/1   | `{"username": "Potato"}`                  | 200   | Found user with _id `1` |
+| http://localhost:8000/users/asd | `{"error": "Path not found: /users/asd"}` | 404   | Wrong type for _id      |
